@@ -1,5 +1,7 @@
 const fs = require("fs");
 
+require('dotenv').config();
+
 usePlugin("@nomiclabs/buidler-waffle");
 
 task("deploy-create2", "Deploys contract with the given salt")
@@ -25,7 +27,7 @@ module.exports = {
   defaultNetwork: "ropsten",
   networks: {
     ropsten: {
-        url: "https://ropsten.infura.io/v3/84842078b09946638c03157f83405213",
+        url: `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`,
         accounts: [process.env.ETH_PRIVATE_KEY],
     }
   },
