@@ -1,12 +1,13 @@
 const ethers = require("ethers");
 const zksync = require("zksync");
-
 const crypto = require("crypto");
+
+require('dotenv').config();
 
 async function createDepositWallet() {
     const ethProvider = new ethers.providers.getDefaultProvider("ropsten");
     const ethSigner = new ethers.Wallet(process.env.ETH_PRIVATE_KEY).connect(ethProvider);
-    const zksyncProvider = await zksync.getDefaultProvider("ropsten-beta")
+    const zksyncProvider = await zksync.getDefaultProvider("ropsten-beta");
     return zksync.wallet.Wallet.fromEthSigner(ethSigner, zksyncProvider);
 }
 
@@ -30,15 +31,15 @@ async function main() {
         saltArg,
     };
 
-    const zksyncProvider = await zksync.getDefaultProvider("ropsten-beta")
+    const zksyncProvider = await zksync.getDefaultProvider("ropsten-beta");
     const ethSigner = new zksync.create2wallet.Create2WalletSigner(signer.pubKeyHash(), create2Auth);
-    console.log("Generated new account");
-    console.log("address:",ethSigner.address);
-    console.log("salt:",ethSigner.salt);
+    console.log("============ Generated new account ============");
+    console.log("address: ", ethSigner.address);
+    console.log("salt: ", ethSigner.salt);
 
     const zksWallet = await zksync.wallet.Wallet.fromEthSigner(ethSigner, zksyncProvider, signer, null, { verificationMethod: "ERC-1271", isSignedMsgPrefixed: true});
 
-    console.log("Depositing to new account");
+    console.log("============ Depositing to new account ============");
     const depositWallet = await createDepositWallet();
     const depositHandle = await depositWallet.depositToSyncFromEthereum({
         depositTo: zksWallet.address(),
@@ -48,14 +49,14 @@ async function main() {
     });
     await depositHandle.awaitReceipt();
 
-    console.log("Setting ChangePubkey for Create2Walelt");
+    console.log("============ Setting ChangePubkey for Create2Wallet ============");
     const chpk = await zksWallet.setSigningKey({
         feeToken: "ETH",
         changePubkeyType: "Create2Contract"
     });
     await chpk.awaitReceipt();
 
-    console.log("Making transfer");
+    console.log("============ Making transfer ============");
     const transfer = await zksWallet.syncTransfer({
         to: zksWallet.address(),
         token: "ETH",
@@ -69,6 +70,6 @@ async function main() {
 main()
     .then(() => process.exit(0))
     .catch((e) => {
-        console.error("Error: ",e);
+        console.error("Error: ", e);
         process.exit(1)
     })
